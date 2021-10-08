@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
     private SlidingUpPanelLayout slidingPaneLayout;
+    private String test;
     private static final String[] PERMISSIONS ={
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
@@ -55,6 +56,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mLocationSource = new FusedLocationSource(this,PERMISSION_REQUEST_CODE);
 
+        new Thread(new Runnable(){
+           @Override
+           public void run(){
+
+           }
+        });
 
     }
 

@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -15,7 +16,7 @@
         android:theme="@style/Theme.WheelChair">
         <meta-data
             android:name="com.google.android.actions"
-            android:resource="@xml/network_config.xml" />
+            android:resource="@xml/network_config" />
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="u0lsfp0ert" />
