@@ -13,7 +13,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.WheelChair">
+        android:theme="@style/Theme.WheelChair"
+        android:networkSecurityConfig="@xml/network_config"
+        android:usesCleartextTraffic="true">
         <meta-data
             android:name="com.google.android.actions"
             android:resource="@xml/network_config" />
@@ -21,7 +23,7 @@
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="u0lsfp0ert" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".Activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
