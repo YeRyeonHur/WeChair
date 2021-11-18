@@ -2,8 +2,18 @@ package com.example.wheelchair.DTO;
 
 public class MapPointDTO {
     private double latitude, longitude;
+    private int estbDate;
+
+    public int getEstbDate() {
+        return estbDate;
+    }
+
+    public void setEstbDate(int estbDate) {
+        this.estbDate = estbDate;
+    }
+
     private String name;
-    private int type; //type=0 화장실 type=1버스정류장
+    private int type; //type=0 화장실 type=1버스정류장 2 = 음식점
 
     public MapPointDTO (){
         super();
