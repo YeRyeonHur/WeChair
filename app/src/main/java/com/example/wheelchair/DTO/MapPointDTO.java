@@ -2,7 +2,15 @@ package com.example.wheelchair.DTO;
 
 public class MapPointDTO {
     private double latitude, longitude;
-    private int estbDate;
+    private int estbDate, wfcltId;
+
+    public int getWfcltId() {
+        return wfcltId;
+    }
+
+    public void setWfcltId(int wfcltId) {
+        this.wfcltId = wfcltId;
+    }
 
     public int getEstbDate() {
         return estbDate;
