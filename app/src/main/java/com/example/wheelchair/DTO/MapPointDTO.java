@@ -3,7 +3,7 @@ package com.example.wheelchair.DTO;
 public class MapPointDTO {
     private double latitude, longitude;
     private int estbDate, wfcltId;
-
+    private String faclTyCd;
     public int getWfcltId() {
         return wfcltId;
     }
@@ -12,6 +12,7 @@ public class MapPointDTO {
         this.wfcltId = wfcltId;
     }
 
+    public void setfaclTyCd(String faclTyCd){ this.faclTyCd = faclTyCd;}
     public int getEstbDate() {
         return estbDate;
     }
@@ -21,7 +22,7 @@ public class MapPointDTO {
     }
 
     private String name;
-    private int type; //type=0 화장실 type=1버스정류장 2 = 음식점
+    private int type; //type=0 화장실 type=1 버스정류장 2 = 음식점
 
     public MapPointDTO (){
         super();
