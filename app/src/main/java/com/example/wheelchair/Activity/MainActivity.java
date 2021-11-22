@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             textView.setText("파싱 실패");
         }
         textView.setText("파싱 종료!");
-    }
+    }//
 
     public void buttonClicked(View v) {
         switch (v.getId()) {
