@@ -65,5 +65,5 @@ public class MapPointDTO {
 
     public void setType(int type) {
         this.type = type;
-    }
+    }//
 }
