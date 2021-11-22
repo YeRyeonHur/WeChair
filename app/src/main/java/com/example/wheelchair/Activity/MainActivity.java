@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     double lat = obj.getLatitude();
                                     double lng = obj.getLongitude();
                                     LatLng tmp = new LatLng(lat, lng);
-                                    if (!withinSightMarker(getCurrentPosition(mNaverMap), tmp)) {
+                                    if (withinSightMarker(getCurrentPosition(mNaverMap), tmp)) {
                                         continue;
                                     }
                                     Marker marker = new Marker();
