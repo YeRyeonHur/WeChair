@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             mapPoint.setWfcltId(id);
                             mapPoint.setfaclTyCd(cd);
                             mapPointDTOS.add(mapPoint);
-                            textView.setText("확인");
+                            //textView.setText("확인");
                         }
                         break;
                 }
