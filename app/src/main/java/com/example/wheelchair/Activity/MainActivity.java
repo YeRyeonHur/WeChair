@@ -245,8 +245,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng tmp = getCurrentPosition(mNaverMap);
         double lat = tmp.latitude;
         double lng = tmp.longitude;
-        double REFERANCE_LAT_X3 = 1 / lat;
-        double REFERANCE_LNG_X3 = 1 / lng;
+        double REFERANCE_LAT_X3 = 3 / lat;
+        double REFERANCE_LNG_X3 = 3 / lng;
         boolean withinSightMarkerLat = Math.abs(currentPosition.latitude - markerPosition.latitude) <= REFERANCE_LAT_X3;
         boolean withinSightMarkerLng = Math.abs(currentPosition.longitude - markerPosition.longitude) <= REFERANCE_LNG_X3;
         return withinSightMarkerLat && withinSightMarkerLng;
