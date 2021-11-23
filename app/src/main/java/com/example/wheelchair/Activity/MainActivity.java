@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
-        getData();
+        //getData();
         LatLng initialPosition = new LatLng(35.88754486390442, 128.6117392305679);
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(initialPosition);
         naverMap.moveCamera(cameraUpdate);
@@ -196,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             mapPoint.setWfcltId(id);
                             mapPoint.setfaclTyCd(cd);
                             mapPointDTOS.add(mapPoint);
-                            //textView.setText("확인");
                         }
                         break;
                 }
