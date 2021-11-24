@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String[] PERMISSIONS = {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
-    };
+    };//
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
