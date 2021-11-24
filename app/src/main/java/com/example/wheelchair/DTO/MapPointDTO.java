@@ -16,7 +16,7 @@ public class MapPointDTO {
     public int getEstbDate() {
         return estbDate;
     }
-
+    public String getFaclTyCd(){ return faclTyCd;}
     public void setEstbDate(int estbDate) {
         this.estbDate = estbDate;
     }

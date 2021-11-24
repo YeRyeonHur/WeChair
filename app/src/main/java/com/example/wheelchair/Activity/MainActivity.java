@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<Marker> markers = new ArrayList<Marker>();
     private Vector<MapPointDTO> mapPointDTOS = new Vector<MapPointDTO>();
     private Vector<Marker> activeMarkers;
-    private TextView textView;
     private static final String[] PERMISSIONS = {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
@@ -72,7 +71,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         restaurantButton = (Button) findViewById(R.id.restaurant);
         slidingPaneLayout = (SlidingUpPanelLayout) findViewById(R.id.slidingPanel);
 
-        textView = (TextView) findViewById(R.id.result);
         FragmentManager fm = getSupportFragmentManager();
         MapFragment mapFragment = (MapFragment) fm.findFragmentById(R.id.map_fragment);
 
@@ -96,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
-        //getData();
+        getData();
         LatLng initialPosition = new LatLng(35.88754486390442, 128.6117392305679);
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(initialPosition);
         naverMap.moveCamera(cameraUpdate);
@@ -202,39 +200,40 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 parserEvent = parser.next();
             }
         } catch (Exception e) {
-            textView.setText("파싱 실패");
-        }
-        textView.setText("파싱 종료!");
-    }//
-
-    public void buttonClicked(View v) {
-        switch (v.getId()) {
-            case R.id.new_data:
-                // 쓰레드를 생성하여 돌리는 구간
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        getData(); // 하단의 getData 메소드를 통해 데이터를 파싱
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                for (MapPointDTO obj : mapPointDTOS) {
-                                    double lat = obj.getLatitude();
-                                    double lng = obj.getLongitude();
-                                    LatLng tmp = new LatLng(lat, lng);
-                                    if (withinSightMarker(getCurrentPosition(mNaverMap), tmp)) {
-                                        continue;
-                                    }
-                                    Marker marker = new Marker();
-                                    setMarker(mNaverMap, marker, lat, lng);
-                                }
-                            }
-                        });
-                    }
-                }).start();
-                break;
         }
     }
+
+    public void buttonClicked(View v) {
+        freeActiveMarkers();
+        switch (v.getId()) {
+            case R.id.toilet:
+                for (MapPointDTO obj : mapPointDTOS) {
+                    double lat = obj.getLatitude();
+                    double lng = obj.getLongitude();
+                    LatLng tmp = new LatLng(lat, lng);
+                    if (obj.getFaclTyCd().equals("UC0A13")) {
+                        Marker marker = new Marker();
+                        setMarker(mNaverMap, marker, lat, lng);
+                        activeMarkers.add(marker);
+                    }
+                }
+                break;
+            case R.id.restaurant:
+                for (MapPointDTO obj : mapPointDTOS) {
+                    double lat = obj.getLatitude();
+                    double lng = obj.getLongitude();
+                    LatLng tmp = new LatLng(lat, lng);
+                    if (obj.getFaclTyCd().equals("UC0B01")) {
+                        Marker marker = new Marker();
+                        setMarker(mNaverMap, marker, lat, lng);
+                        activeMarkers.add(marker);
+                    }
+                }
+                break;
+        }
+
+    }
+
     // 현재 카메라가 보고있는 위치
     public LatLng getCurrentPosition(NaverMap naverMap) {
         CameraPosition cameraPosition = naverMap.getCameraPosition();
@@ -254,12 +253,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // 지도상에 표시되고있는 마커들 지도에서 삭제
     private void freeActiveMarkers() {
-        if (activeMarkers == null) {
-            activeMarkers = new Vector<Marker>();
-            return;
-        }
-        for (Marker activeMarker : activeMarkers) {
-            activeMarker.setMap(null);
+        if (activeMarkers != null) {
+            for (Marker activeMarker : activeMarkers) {
+                activeMarker.setMap(null);
+            }
         }
         activeMarkers = new Vector<Marker>();
     }
