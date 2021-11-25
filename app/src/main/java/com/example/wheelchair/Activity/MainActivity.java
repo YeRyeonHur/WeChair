@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentManager;
 import android.Manifest;
 import android.content.AsyncQueryHandler;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,6 +16,7 @@ import android.os.StrictMode;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.wheelchair.DTO.MapPointDTO;
@@ -27,6 +29,7 @@ import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
 import com.naver.maps.map.OnMapReadyCallback;
 import com.naver.maps.map.UiSettings;
+import com.naver.maps.map.overlay.InfoWindow;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
 import com.naver.maps.map.util.FusedLocationSource;
@@ -52,7 +55,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     ImageView new_data;
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
+    private InfoWindow mInfoWindow;
+    private TextView slidingTextView;
     private SlidingUpPanelLayout slidingPaneLayout;
+    private LinearLayout dragView;
     private ArrayList<Marker> markers = new ArrayList<Marker>();
     private Vector<MapPointDTO> mapPointDTOS = new Vector<MapPointDTO>();
     private Vector<Marker> activeMarkers;
@@ -70,6 +76,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         busStationButton = (Button) findViewById(R.id.busStation);
         restaurantButton = (Button) findViewById(R.id.restaurant);
         slidingPaneLayout = (SlidingUpPanelLayout) findViewById(R.id.slidingPanel);
+        dragView = (LinearLayout) findViewById(R.id.dragView);
+        dragView.setClickable(false);
+        slidingPaneLayout.setFadeOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+            }
+        });
+        slidingTextView = (TextView) findViewById(R.id.slidingText);
 
         FragmentManager fm = getSupportFragmentManager();
         MapFragment mapFragment = (MapFragment) fm.findFragmentById(R.id.map_fragment);
@@ -88,12 +103,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setMarker(@NonNull NaverMap naverMap, Marker marker, double lat, double lng) {
         marker.setPosition(new LatLng(lat, lng));
+        marker.setOnClickListener(this);
         marker.setMap(naverMap);
     }
 
 
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
+        mInfoWindow = new InfoWindow();
+        mInfoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
+            @NonNull
+            @Override
+            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                Marker marker = infoWindow.getMarker();
+                MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
+                if (mapPointDTO.getFaclTyCd().equals("UC0A13")) {
+                    return "화장실";
+                }
+                else if (mapPointDTO.getFaclTyCd().equals("UC0B01")){
+                    return "식당";
+                }
+                else {
+                    return null;
+                }
+            }
+        });
+
         getData();
         LatLng initialPosition = new LatLng(35.88754486390442, 128.6117392305679);
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(initialPosition);
@@ -109,16 +144,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         naverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(int reason, boolean animated) {
-                freeActiveMarkers();
-                /*LatLng currentPosition = getCurrentPosition(naverMap);
-                for (MapPointDTO mapPointDTO : mapPointDTOS) {
-                    LatLng mapPointLatLng = new LatLng(mapPointDTO.getLatitude(), mapPointDTO.getLongitude());
-                    if (!withinSightMarker(currentPosition, mapPointLatLng)) continue;
-                    Marker marker = new Marker();
-                    marker.setPosition(mapPointLatLng);
-                    marker.setMap(naverMap);
-                    activeMarkers.add(marker);
-                }*/
+                //freeActiveMarkers();
             }
         });
 
@@ -137,7 +163,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onClick(@NonNull Overlay overlay) {
         if (overlay instanceof Marker) {
+            Marker marker = (Marker) overlay;
+            MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
+            slidingTextView.setText(mapPointDTO.getName());
             slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+
             return true;
         }
         return false;
@@ -213,6 +243,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     LatLng tmp = new LatLng(lat, lng);
                     if (obj.getFaclTyCd().equals("UC0A13")) {
                         Marker marker = new Marker();
+                        marker.setTag(obj);
+                        marker.setIconTintColor(Color.BLUE);
                         setMarker(mNaverMap, marker, lat, lng);
                         activeMarkers.add(marker);
                     }
@@ -225,6 +257,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     LatLng tmp = new LatLng(lat, lng);
                     if (obj.getFaclTyCd().equals("UC0B01")) {
                         Marker marker = new Marker();
+                        marker.setTag(obj);
+                        marker.setIconTintColor(Color.GREEN);
                         setMarker(mNaverMap, marker, lat, lng);
                         activeMarkers.add(marker);
                     }

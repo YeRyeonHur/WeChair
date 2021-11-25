@@ -11,6 +11,7 @@
     app:umanoOverlay="false"
     app:umanoParallaxOffset="100dp"
     app:umanoShadowHeight="10dp"
+    app:umanoFadeColor="@android:color/transparent"
     android:id="@+id/slidingPanel">
     <!-- gravity 를 bottom으로 하면 아래에서 위로 드래그, top으로 하면 위에서 아래로 드래그 할 수 있다.
          umanoDragView 드래그 해서 보여줄 view를 선택
@@ -52,14 +53,16 @@
                     android:layout_marginLeft="10dp"
                     android:text="화장실"
                     android:clickable="true"
-                    android:onClick="buttonClicked"/>
+                    android:onClick="buttonClicked"
+                    android:backgroundTint="@android:color/holo_blue_light"/>
                 <Button
                     android:id="@+id/busStation"
                     android:layout_width="100dp"
                     android:layout_height="40dp"
                     android:layout_marginTop="20dp"
                     android:layout_marginLeft="10dp"
-                    android:text="저상버스"/>
+                    android:text="저상버스"
+                    android:backgroundTint="@android:color/holo_orange_light"/>
                 <Button
                     android:id="@+id/restaurant"
                     android:layout_width="100dp"
@@ -68,7 +71,8 @@
                     android:layout_marginLeft="10dp"
                     android:text="음식점"
                     android:clickable="true"
-                    android:onClick="buttonClicked"/>
+                    android:onClick="buttonClicked"
+                    android:backgroundTint="@android:color/holo_green_light"/>
                 <ImageView
                     android:id="@+id/new_data"
                     android:layout_width="100dp"
@@ -79,6 +83,17 @@
                     android:clickable="true"
                     android:onClick="buttonClicked"/>
             </LinearLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:id="@+id/result"
+                    android:text="test"
+                    android:textColor="@color/black"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </ScrollView>
         </LinearLayout>
 
 
