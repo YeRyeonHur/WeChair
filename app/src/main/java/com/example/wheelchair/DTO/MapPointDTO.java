@@ -2,13 +2,36 @@ package com.example.wheelchair.DTO;
 
 public class MapPointDTO {
     private double latitude, longitude;
-    private int estbDate, wfcltId;
+    private int estbDate;
+    private String wfcltId;
     private String faclTyCd;
-    public int getWfcltId() {
+    private boolean infoFlag = false;
+
+    public boolean[] getInfo() {
+        return info;
+    }
+
+    public void setInfo(boolean[] info) {
+        this.info = info;
+        infoFlag = true;
+    }
+
+    public boolean hasInfo() {
+        return infoFlag;
+    }
+
+    private boolean info[];
+    //계단, 승강설비, 장애인전용 주차구역, 주출입구 접근로, 주출입구 높이차이 제거
+
+    public String getWfcltId() {
         return wfcltId;
     }
 
-    public void setWfcltId(int wfcltId) {
+    public void setFaclTyCd(String faclTyCd) {
+        this.faclTyCd = faclTyCd;
+    }
+
+    public void setWfcltId(String wfcltId) {
         this.wfcltId = wfcltId;
     }
 

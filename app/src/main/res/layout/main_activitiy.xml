@@ -146,14 +146,17 @@
                 android:layout_marginLeft="8dp"
                 android:layout_marginRight="8dp">
                 <ImageView
+                    android:id="@+id/img_ramp"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/ic_baseline_accessible_24"/>
                 <ImageView
+                    android:id="@+id/img_stair"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/ic_baseline_accessible_forward_24"/>
                 <ImageView
+                    android:id="@+id/img_elevator"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/ic_baseline_airline_seat_legroom_normal_24"/>

@@ -52,7 +52,9 @@ import java.util.Vector;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, Overlay.OnClickListener {
     private static final int PERMISSION_REQUEST_CODE = 100;
     Button toiletButton, busStationButton, restaurantButton;
-    ImageView new_data;
+    ImageView img_ramp;
+    ImageView img_elevator;
+    ImageView img_stair;
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
     private InfoWindow mInfoWindow;
@@ -85,6 +87,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
         slidingTextView = (TextView) findViewById(R.id.slidingText);
+        img_ramp = (ImageView) findViewById(R.id.img_ramp);
+        img_elevator = (ImageView) findViewById(R.id.img_elevator);
+        img_stair = (ImageView) findViewById(R.id.img_stair);
 
         FragmentManager fm = getSupportFragmentManager();
         MapFragment mapFragment = (MapFragment) fm.findFragmentById(R.id.map_fragment);
@@ -110,25 +115,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
-        mInfoWindow = new InfoWindow();
-        mInfoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
-            @NonNull
-            @Override
-            public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                Marker marker = infoWindow.getMarker();
-                MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
-                if (mapPointDTO.getFaclTyCd().equals("UC0A13")) {
-                    return "화장실";
-                }
-                else if (mapPointDTO.getFaclTyCd().equals("UC0B01")){
-                    return "식당";
-                }
-                else {
-                    return null;
-                }
-            }
-        });
-
         getData();
         LatLng initialPosition = new LatLng(35.88754486390442, 128.6117392305679);
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(initialPosition);
@@ -165,7 +151,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (overlay instanceof Marker) {
             Marker marker = (Marker) overlay;
             MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
-            slidingTextView.setText(mapPointDTO.getName());
+            if (mapPointDTO.hasInfo() == false) {
+                getDataFaclInfo(mapPointDTO);
+            }
+            boolean[] infoFlag = mapPointDTO.getInfo();
+            // 경사로
+            if (infoFlag[0]) {
+                img_ramp.setImageResource(R.drawable.ic_baseline_accessible_24);
+            } else {
+                img_ramp.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+            // 엘리베이터
+            if (infoFlag[1]) {
+                img_elevator.setImageResource(R.drawable.ic_baseline_airline_seat_legroom_normal_24);
+            } else {
+                img_elevator.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+            // 계단(테스트용으로 진입정보에 '대변기' 있으면 띄우도록 설정. 화장실에선 뜨는게 정상. 아이콘 중 중간에 위치
+            if (infoFlag[2]) {
+                img_stair.setImageResource(R.drawable.ic_baseline_autorenew_24);
+            } else {
+                img_stair.setImageResource(R.drawable.ic_launcher_foreground);
+            }
+
+            slidingTextView.setText(mapPointDTO.getWfcltId());
             slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
 
             return true;
@@ -183,9 +192,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             parser.setInput(new InputStreamReader(is, "UTF-8"));
 
             int parserEvent = parser.getEventType();
-            int estbdate = 0, id = 0;
+            int estbdate = 0;
             double lat = 0.0, lng = 0.0;
-            String name = null, cd = null;
+            String name = null, cd = null, id = null;
             while (parserEvent != XmlPullParser.END_DOCUMENT) {
                 switch (parserEvent) {
                     case XmlPullParser.START_DOCUMENT:
@@ -196,10 +205,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             estbdate = Integer.parseInt(parser.getText());
                         } else if (parser.getName().equals("faclLat")) { //title 만나면 내용을 받을수 있게 하자
                             parser.next();
-                            lng = Double.parseDouble(parser.getText());
+                            lat = Double.parseDouble(parser.getText());
                         } else if (parser.getName().equals("faclLng")) { //title 만나면 내용을 받을수 있게 하자
                             parser.next();
-                            lat = Double.parseDouble(parser.getText());
+                            lng = Double.parseDouble(parser.getText());
                         } else if (parser.getName().equals("faclNm")) { //title 만나면 내용을 받을수 있게 하자
                             parser.next();
                             name = parser.getText();
@@ -208,7 +217,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             cd = parser.getText();
                         } else if (parser.getName().equals("wfcltId")) {
                             parser.next();
-                            id = Integer.parseInt(parser.getText());
+                            id = parser.getText();
                         }
                         break;
                     case XmlPullParser.TEXT:
@@ -224,6 +233,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             mapPoint.setWfcltId(id);
                             mapPoint.setfaclTyCd(cd);
                             mapPointDTOS.add(mapPoint);
+                        }
+                        break;
+                }
+                parserEvent = parser.next();
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    private void getDataFaclInfo(MapPointDTO mapPointDTO) {
+        try {
+            String wFaclId = mapPointDTO.getWfcltId();
+            String url_str = "http://apis.data.go.kr/B554287/DisabledPersonConvenientFacility/getFacInfoOpenApiJpEvalInfoList?"
+                    + "serviceKey=ILTqw3kO5xY0W9LmfQzwMcKHHOEqv4aXn3iBkRv6V7MDJLADpnXT4x6jJeNzx409g03rioaANmj%2BGSzTu6G9tA%3D%3D&wfcltId=" + wFaclId;
+            URL url = new URL(url_str); //검색 URL부분
+            InputStream is = url.openStream();
+            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = parserCreator.newPullParser();
+            parser.setInput(new InputStreamReader(is, "UTF-8"));
+
+            int parserEvent = parser.getEventType();
+            String info;
+            boolean[] info_flag_list = new boolean[5];
+            while (parserEvent != XmlPullParser.END_DOCUMENT) {
+                switch (parserEvent) {
+                    case XmlPullParser.START_DOCUMENT:
+                        break;
+                    case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
+                        if (parser.getName().equals("evalInfo")) { //title 만나면 내용을 받을수 있게 하자
+                            parser.next();
+                            info = parser.getText();
+                            if (info.contains("경사로")) {
+                                info_flag_list[0] = true;
+                            }
+                            if (info.contains("엘리베이터")) {
+                                info_flag_list[1] = true;
+                            }
+                            if (info.contains("대변기")) {
+                                info_flag_list[2] = true;
+                            }
+                        }
+                        break;
+                    case XmlPullParser.TEXT:
+                        break;
+
+                    case XmlPullParser.END_TAG:
+                        if (parser.getName().equals("servList")) {
+                            mapPointDTO.setInfo(info_flag_list);
                         }
                         break;
                 }
