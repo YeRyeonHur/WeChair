@@ -56,12 +56,14 @@
                     android:onClick="buttonClicked"
                     android:backgroundTint="@android:color/holo_blue_light"/>
                 <Button
-                    android:id="@+id/busStation"
+                    android:id="@+id/station"
                     android:layout_width="100dp"
                     android:layout_height="40dp"
                     android:layout_marginTop="20dp"
                     android:layout_marginLeft="10dp"
                     android:text="저상버스"
+                    android:clickable="true"
+                    android:onClick="buttonClicked"
                     android:backgroundTint="@android:color/holo_orange_light"/>
                 <Button
                     android:id="@+id/restaurant"
@@ -84,16 +86,6 @@
                     android:onClick="buttonClicked"/>
             </LinearLayout>
 
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <TextView
-                    android:id="@+id/result"
-                    android:text="test"
-                    android:textColor="@color/black"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-            </ScrollView>
         </LinearLayout>
 
 
@@ -113,7 +105,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/slidingText"
@@ -121,14 +113,18 @@
                 android:layout_height="wrap_content"
                 android:padding="16sp"
                 android:text="경북대학교 본관"
-                android:textSize="16sp" />
+                android:textSize="18sp" />
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_baseline_autorenew_24"/>
 
         </LinearLayout>
 
         <!-- 스크롤 해서 보여줄 부분은 listview 또는 custom listview 또는 recyclerview를 사용 -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="200dp"
             android:orientation="horizontal"
             android:gravity="center">
             <ImageView
@@ -139,6 +135,7 @@
                 android:layout_marginRight="8dp"
                 android:src="@drawable/sample1"/>
             <LinearLayout
+                android:id="@+id/linearLayoutToiletRes"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
@@ -160,6 +157,20 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/ic_baseline_airline_seat_legroom_normal_24"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/linearLayoutBus"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:visibility="gone">
+                <ListView
+                    android:id="@+id/busListView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
         </LinearLayout>
 

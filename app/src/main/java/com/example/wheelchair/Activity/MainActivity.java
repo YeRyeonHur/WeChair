@@ -1,25 +1,26 @@
 package com.example.wheelchair.Activity;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 
 import android.Manifest;
-import android.content.AsyncQueryHandler;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.StrictMode;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.wheelchair.DTO.MapPointDTO;
+import com.example.wheelchair.DTO.NowBus;
 import com.example.wheelchair.R;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.CameraPosition;
@@ -42,11 +43,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Vector;
+
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, Overlay.OnClickListener {
@@ -75,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.main_activitiy);
 
         toiletButton = (Button) findViewById(R.id.toilet);
-        busStationButton = (Button) findViewById(R.id.busStation);
+        busStationButton = (Button) findViewById(R.id.station);
         restaurantButton = (Button) findViewById(R.id.restaurant);
         slidingPaneLayout = (SlidingUpPanelLayout) findViewById(R.id.slidingPanel);
         dragView = (LinearLayout) findViewById(R.id.dragView);
@@ -116,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
         getData();
+        getBusData();
         LatLng initialPosition = new LatLng(35.88754486390442, 128.6117392305679);
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(initialPosition);
         naverMap.moveCamera(cameraUpdate);
@@ -148,34 +147,62 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onClick(@NonNull Overlay overlay) {
+        LinearLayout toilet_restaurant_linearLayout, bus_linearLayout;
+        toilet_restaurant_linearLayout = (LinearLayout) findViewById(R.id.linearLayoutToiletRes);
+        bus_linearLayout = (LinearLayout) findViewById(R.id.linearLayoutBus);
+
         if (overlay instanceof Marker) {
             Marker marker = (Marker) overlay;
-            MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
-            if (mapPointDTO.hasInfo() == false) {
-                getDataFaclInfo(mapPointDTO);
-            }
-            boolean[] infoFlag = mapPointDTO.getInfo();
-            // 경사로
-            if (infoFlag[0]) {
-                img_ramp.setImageResource(R.drawable.ic_baseline_accessible_24);
-            } else {
-                img_ramp.setImageResource(R.drawable.ic_launcher_foreground);
-            }
-            // 엘리베이터
-            if (infoFlag[1]) {
-                img_elevator.setImageResource(R.drawable.ic_baseline_airline_seat_legroom_normal_24);
-            } else {
-                img_elevator.setImageResource(R.drawable.ic_launcher_foreground);
-            }
-            // 계단(테스트용으로 진입정보에 '대변기' 있으면 띄우도록 설정. 화장실에선 뜨는게 정상. 아이콘 중 중간에 위치
-            if (infoFlag[2]) {
-                img_stair.setImageResource(R.drawable.ic_baseline_autorenew_24);
-            } else {
-                img_stair.setImageResource(R.drawable.ic_launcher_foreground);
-            }
 
-            slidingTextView.setText(mapPointDTO.getWfcltId());
-            slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+            MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
+
+
+            if (mapPointDTO.getFaclTyCd() != "BUS") {
+                if (mapPointDTO.hasInfo() == false) {
+                    //화장실, 음식점 출입 정보
+                    getDataFaclInfo(mapPointDTO);
+                }
+                bus_linearLayout.setVisibility(View.GONE);
+                toilet_restaurant_linearLayout.setVisibility(View.VISIBLE);
+                boolean[] infoFlag = mapPointDTO.getInfo();
+                // 경사로
+                if (infoFlag[0]) {
+                    img_ramp.setImageResource(R.drawable.ic_baseline_accessible_24);
+                } else {
+                    img_ramp.setImageResource(R.drawable.ic_launcher_foreground);
+                }
+                // 엘리베이터
+                if (infoFlag[1]) {
+                    img_elevator.setImageResource(R.drawable.ic_baseline_airline_seat_legroom_normal_24);
+                } else {
+                    img_elevator.setImageResource(R.drawable.ic_launcher_foreground);
+                }
+                // 계단(테스트용으로 진입정보에 '대변기' 있으면 띄우도록 설정. 화장실에선 뜨는게 정상. 아이콘 중 중간에 위치
+                if (infoFlag[2]) {
+                    img_stair.setImageResource(R.drawable.ic_baseline_autorenew_24);
+                } else {
+                    img_stair.setImageResource(R.drawable.ic_launcher_foreground);
+                }
+
+                slidingTextView.setText(mapPointDTO.getWfcltId());
+                slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+            }
+            //버스 정류장 데이터 가져오기
+            else {
+                toilet_restaurant_linearLayout.setVisibility(View.GONE);
+                bus_linearLayout.setVisibility(View.VISIBLE);
+                ArrayList<NowBus> nowBuses = new ArrayList<NowBus>();
+                nowBuses = getDataNowBus(mapPointDTO);
+                Log.i("test",mapPointDTO.getName());
+                for(NowBus bus : nowBuses){
+                    Log.i("test",bus.getBusNum()+"  "+bus.getBusType()+"  "+bus.getTime());
+                }
+                ListView listView = (ListView) findViewById(R.id.busListView);
+                final NowBusAdapter nowBusAdapter = new NowBusAdapter(this, nowBuses);
+                listView.setAdapter(nowBusAdapter);
+                slidingTextView.setText(mapPointDTO.getName());
+                slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+            }
 
             return true;
         }
@@ -242,6 +269,65 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    private void getBusData() {
+        try {
+            String url_str = "http://openapi.tago.go.kr/openapi/service/BusSttnInfoInqireService/getSttnNoList?serviceKey=L2VM7f1PPrN4%2FiRYxA9H%2F47FcZ6L8Mp72fB67Gqj0YjzlKQ%2FgmqtTURCNbQf7e2jIaMkdordccx0dbQx3UmPeg%3D%3D&cityCode=22&" +
+                    "numOfRows=" + "10000" + "&pageNo=1";
+            URL url = new URL(url_str); //검색 URL부분
+            InputStream is = url.openStream();
+            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = parserCreator.newPullParser();
+            parser.setInput(new InputStreamReader(is, "UTF-8"));
+
+            int parserEvent = parser.getEventType();
+            double lat = 0.0, lng = 0.0;
+            String name = null, nodeId = null;
+            int nodeNum = 0;
+            while (parserEvent != XmlPullParser.END_DOCUMENT) {
+                switch (parserEvent) {
+                    case XmlPullParser.START_DOCUMENT:
+                        break;
+                    case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
+                        if (parser.getName().equals("gpslati")) { //title 만나면 내용을 받을수 있게 하자
+                            parser.next();
+                            lat = Double.parseDouble(parser.getText());
+                        } else if (parser.getName().equals("gpslong")) { //title 만나면 내용을 받을수 있게 하자
+                            parser.next();
+                            lng = Double.parseDouble(parser.getText());
+                        } else if (parser.getName().equals("nodeid")) { //title 만나면 내용을 받을수 있게 하자
+                            parser.next();
+                            nodeId = parser.getText();
+                        } else if (parser.getName().equals("nodenm")) {
+                            parser.next();
+                            name = parser.getText();
+                        } else if (parser.getName().equals("nodeno")) {
+                            parser.next();
+                            nodeNum = Integer.parseInt(parser.getText());
+                        }
+                        break;
+                    case XmlPullParser.TEXT:
+                        break;
+
+                    case XmlPullParser.END_TAG:
+                        if (parser.getName().equals("item")) {
+                            MapPointDTO mapPointDTO = new MapPointDTO();
+                            mapPointDTO.setLatitude(lat);
+                            mapPointDTO.setLongitude(lng);
+                            mapPointDTO.setWfcltId(nodeId);
+                            mapPointDTO.setName(name);
+                            mapPointDTO.setNodeNm(nodeNum);
+                            mapPointDTO.setfaclTyCd("BUS");
+                            mapPointDTOS.add(mapPointDTO);
+                        }
+                        break;
+                }
+                parserEvent = parser.next();
+            }
+        } catch (Exception e) {
+            Log.i("test",String.valueOf(e));
+        }
+    }
+
     private void getDataFaclInfo(MapPointDTO mapPointDTO) {
         try {
             String wFaclId = mapPointDTO.getWfcltId();
@@ -290,6 +376,60 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    private ArrayList<NowBus> getDataNowBus(MapPointDTO mapPointDTO) {
+        ArrayList<NowBus> buses = new ArrayList<NowBus>();
+        try {
+            String NodeCd = mapPointDTO.getWfcltId();
+            String url_str = "http://openapi.tago.go.kr/openapi/service/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList?serviceKey=L2VM7f1PPrN4%2FiRYxA9H%2F47FcZ6L8Mp72fB67Gqj0YjzlKQ%2FgmqtTURCNbQf7e2jIaMkdordccx0dbQx3UmPeg%3D%3D&cityCode=22&" +
+                    "nodeId=" + NodeCd;
+            Log.i("test",NodeCd);
+            URL url = new URL(url_str); //검색 URL부분
+            InputStream is = url.openStream();
+            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = parserCreator.newPullParser();
+            parser.setInput(new InputStreamReader(is, "UTF-8"));
+
+            int parserEvent = parser.getEventType();
+            String busName = null, busType = null;
+            int arriveTime = 0;
+            while (parserEvent != XmlPullParser.END_DOCUMENT) {
+                switch (parserEvent) {
+                    case XmlPullParser.START_DOCUMENT:
+                        break;
+                    case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
+                        if (parser.getName().equals("arrtime")) { //title 만나면 내용을 받을수 있게 하자
+                            parser.next();
+                            arriveTime = Integer.parseInt(parser.getText());
+                        } else if (parser.getName().equals("routeno")) { //title 만나면 내용을 받을수 있게 하자
+                            parser.next();
+                            busName = parser.getText();
+                        } else if (parser.getName().equals("vehicletp")) { //title 만나면 내용을 받을수 있게 하자
+                            parser.next();
+                            busType = parser.getText();
+                        }
+                        break;
+                    case XmlPullParser.TEXT:
+                        break;
+
+                    case XmlPullParser.END_TAG:
+                        if (parser.getName().equals("item")) {
+                            Log.i("test",busName+"  "+arriveTime+"  "+busType);
+
+                            NowBus nowBus = new NowBus(busName,arriveTime,busType);
+                            nowBus.setBusNum(busName);
+                            buses.add(nowBus);
+                        }
+                        break;
+                }
+                parserEvent = parser.next();
+            }
+        } catch (Exception e) {
+            Log.i("test",String.valueOf(e));
+        }
+
+        return buses;
+    }
+
     public void buttonClicked(View v) {
         freeActiveMarkers();
         switch (v.getId()) {
@@ -316,6 +456,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         Marker marker = new Marker();
                         marker.setTag(obj);
                         marker.setIconTintColor(Color.GREEN);
+                        setMarker(mNaverMap, marker, lat, lng);
+                        activeMarkers.add(marker);
+                    }
+                }
+                break;
+            case R.id.station:
+                Toast.makeText(this, "station", Toast.LENGTH_SHORT).show();
+                for (MapPointDTO obj : mapPointDTOS) {
+                    double lat = obj.getLatitude();
+                    double lng = obj.getLongitude();
+                    LatLng tmp = new LatLng(lat, lng);
+                    if (obj.getFaclTyCd().equals("BUS")) {
+                        Marker marker = new Marker();
+                        marker.setTag(obj);
+                        marker.setIconTintColor(Color.RED);
                         setMarker(mNaverMap, marker, lat, lng);
                         activeMarkers.add(marker);
                     }

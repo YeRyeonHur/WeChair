@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "171997321846",
+    "project_id": "wechair-3f892",
+    "storage_bucket": "wechair-3f892.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171997321846:android:db397b33cf1d9ae8b75d57",
+        "android_client_info": {
+          "package_name": "com.example.wheelchair"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "171997321846-lambm5ent90b5986rscunsmarfcf582n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8EQmCTgzuhOSY9t1VHaR-Ws6F0UblRwU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "171997321846-lambm5ent90b5986rscunsmarfcf582n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

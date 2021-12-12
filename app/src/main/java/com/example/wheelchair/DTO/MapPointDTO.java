@@ -3,9 +3,21 @@ package com.example.wheelchair.DTO;
 public class MapPointDTO {
     private double latitude, longitude;
     private int estbDate;
-    private String wfcltId;
-    private String faclTyCd;
+    private String wfcltId;//busStation에서 node id
+    private String faclTyCd;//busStation 이면 CODE = BUS
     private boolean infoFlag = false;
+    private String name;
+    private int type; //type=0 화장실 type=1 버스정류장 2 = 음식점
+
+    public int getNodeNm() {
+        return nodeNm;
+    }
+
+    public void setNodeNm(int nodeNm) {
+        this.nodeNm = nodeNm;
+    }
+
+    private int nodeNm;//bus station number
 
     public boolean[] getInfo() {
         return info;
@@ -27,9 +39,6 @@ public class MapPointDTO {
         return wfcltId;
     }
 
-    public void setFaclTyCd(String faclTyCd) {
-        this.faclTyCd = faclTyCd;
-    }
 
     public void setWfcltId(String wfcltId) {
         this.wfcltId = wfcltId;
@@ -44,8 +53,6 @@ public class MapPointDTO {
         this.estbDate = estbDate;
     }
 
-    private String name;
-    private int type; //type=0 화장실 type=1 버스정류장 2 = 음식점
 
     public MapPointDTO (){
         super();
