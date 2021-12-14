@@ -167,21 +167,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 boolean[] infoFlag = mapPointDTO.getInfo();
                 // 승강설비
                 if (infoFlag[0]) {
-                    img_elevator.setImageResource(R.drawable.elevator);
+                    img_elevator.setImageAlpha(255);
                 } else {
-                    img_elevator.setImageResource(R.drawable.x);
+                    img_elevator.setImageAlpha(0);
                 }
                 // 높이차이 제거, 접근로 (접근 편이)
                 if (infoFlag[1]) {
-                    img_ramp.setImageResource(R.drawable.ramp);
+                    img_ramp.setImageAlpha(255);
                 } else {
-                    img_ramp.setImageResource(R.drawable.x);
+                    img_ramp.setImageAlpha(0);
                 }
                 // 계단
                 if (infoFlag[2]) {
-                    img_stair.setImageResource(R.drawable.stair);
+                    img_stair.setImageAlpha(255);
                 } else {
-                    img_stair.setImageResource(R.drawable.x);
+                    img_stair.setImageAlpha(0);
                 }
 
                 slidingTextView.setText(mapPointDTO.getName());
