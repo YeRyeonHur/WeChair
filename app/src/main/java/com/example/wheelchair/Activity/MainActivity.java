@@ -85,8 +85,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
         slidingTextView = (TextView) findViewById(R.id.slidingText);
-        img_ramp = (ImageView) findViewById(R.id.img_ramp);
         img_elevator = (ImageView) findViewById(R.id.img_elevator);
+        img_ramp = (ImageView) findViewById(R.id.img_ramp);
         img_stair = (ImageView) findViewById(R.id.img_stair);
 
         FragmentManager fm = getSupportFragmentManager();
@@ -165,26 +165,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 bus_linearLayout.setVisibility(View.GONE);
                 toilet_restaurant_linearLayout.setVisibility(View.VISIBLE);
                 boolean[] infoFlag = mapPointDTO.getInfo();
-                // 경사로
+                // 승강설비
                 if (infoFlag[0]) {
-                    img_ramp.setImageResource(R.drawable.ic_baseline_accessible_24);
+                    img_elevator.setImageResource(R.drawable.elevator);
                 } else {
-                    img_ramp.setImageResource(R.drawable.ic_launcher_foreground);
+                    img_elevator.setImageResource(R.drawable.x);
                 }
-                // 엘리베이터
+                // 높이차이 제거, 접근로 (접근 편이)
                 if (infoFlag[1]) {
-                    img_elevator.setImageResource(R.drawable.ic_baseline_airline_seat_legroom_normal_24);
+                    img_ramp.setImageResource(R.drawable.ramp);
                 } else {
-                    img_elevator.setImageResource(R.drawable.ic_launcher_foreground);
+                    img_ramp.setImageResource(R.drawable.x);
                 }
-                // 계단(테스트용으로 진입정보에 '대변기' 있으면 띄우도록 설정. 화장실에선 뜨는게 정상. 아이콘 중 중간에 위치
+                // 계단
                 if (infoFlag[2]) {
-                    img_stair.setImageResource(R.drawable.ic_baseline_autorenew_24);
+                    img_stair.setImageResource(R.drawable.stair);
                 } else {
-                    img_stair.setImageResource(R.drawable.ic_launcher_foreground);
+                    img_stair.setImageResource(R.drawable.x);
                 }
 
-                slidingTextView.setText(mapPointDTO.getWfcltId());
+                slidingTextView.setText(mapPointDTO.getName());
                 slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
             }
             //버스 정류장 데이터 가져오기
@@ -350,13 +350,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if (parser.getName().equals("evalInfo")) { //title 만나면 내용을 받을수 있게 하자
                             parser.next();
                             info = parser.getText();
-                            if (info.contains("경사로")) {
+                            if (info.contains("승강설비")) {
                                 info_flag_list[0] = true;
                             }
-                            if (info.contains("엘리베이터")) {
+                            if (info.contains("높이차이 제거") || info.contains("접근로")) {
                                 info_flag_list[1] = true;
                             }
-                            if (info.contains("대변기")) {
+                            if (info.contains("계단")) {
                                 info_flag_list[2] = true;
                             }
                         }
