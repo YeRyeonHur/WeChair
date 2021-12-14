@@ -8,10 +8,9 @@
     android:gravity="bottom"
     app:umanoDragView="@id/dragView"
     app:umanoPanelHeight="0dp"
-    app:umanoOverlay="false"
-    app:umanoParallaxOffset="100dp"
-    app:umanoShadowHeight="10dp"
+    app:umanoOverlay="true"
     app:umanoFadeColor="@android:color/transparent"
+    android:background="@color/white"
     android:id="@+id/slidingPanel">
     <!-- gravity 를 bottom으로 하면 아래에서 위로 드래그, top으로 하면 위에서 아래로 드래그 할 수 있다.
          umanoDragView 드래그 해서 보여줄 view를 선택
@@ -31,9 +30,7 @@
             android:name="com.naver.maps.map.MapFragment"
             app:navermap_latitude="35.88886139940279"
             app:navermap_longitude="128.61031638653137"
-            app:navermap_zoom="14"
-
-            >
+            app:navermap_zoom="14">
         </fragment>
         <LinearLayout
             android:layout_width="match_parent"
@@ -54,7 +51,8 @@
                     android:text="화장실"
                     android:clickable="true"
                     android:onClick="buttonClicked"
-                    android:backgroundTint="@android:color/holo_blue_light"/>
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/toilet"/>
                 <Button
                     android:id="@+id/station"
                     android:layout_width="100dp"
@@ -64,7 +62,8 @@
                     android:text="저상버스"
                     android:clickable="true"
                     android:onClick="buttonClicked"
-                    android:backgroundTint="@android:color/holo_orange_light"/>
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/bus"/>
                 <Button
                     android:id="@+id/restaurant"
                     android:layout_width="100dp"
@@ -74,16 +73,8 @@
                     android:text="음식점"
                     android:clickable="true"
                     android:onClick="buttonClicked"
-                    android:backgroundTint="@android:color/holo_green_light"/>
-                <ImageView
-                    android:id="@+id/new_data"
-                    android:layout_width="100dp"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="20dp"
-                    android:text="음식점"
-                    android:src="@drawable/ic_baseline_autorenew_24"
-                    android:clickable="true"
-                    android:onClick="buttonClicked"/>
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/restaurant"/>
             </LinearLayout>
 
         </LinearLayout>
@@ -100,78 +91,98 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:focusable="false"
-        android:orientation="vertical">
-
+        android:orientation="vertical"
+        android:background="@color/colorTransparent">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/slidingText"
-                android:layout_width="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/border_sliding_layout">
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/constraint"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16sp"
-                android:text="경북대학교 본관"
-                android:textSize="18sp" />
+                android:layout_margin="16sp">
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/slidingText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="경북대학교 본관"
+                    android:textSize="18sp"
+                    tools:ignore="MissingConstraints" />
 
-        <!-- 스크롤 해서 보여줄 부분은 listview 또는 custom listview 또는 recyclerview를 사용 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:orientation="horizontal"
-            android:gravity="center">
-            <ImageView
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:layout_weight="1"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:src="@drawable/sample1"/>
+                <ImageView
+                    android:id="@+id/bus_autorenew"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingRight="5sp"
+                    android:src="@drawable/ic_baseline_autorenew_24"
+                    app:layout_constraintRight_toLeftOf="@id/low_floor_bus"
+                    tools:ignore="MissingConstraints" />
+
+                <TextView
+                    android:id="@+id/low_floor_bus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="저상버스"
+                    app:layout_constraintRight_toRightOf="@id/constraint"
+                    tools:ignore="MissingConstraints" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+            <!-- 스크롤 해서 보여줄 부분은 listview 또는 custom listview 또는 recyclerview를 사용 -->
             <LinearLayout
-                android:id="@+id/linearLayoutToiletRes"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_weight="1"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp">
-                <ImageView
-                    android:id="@+id/img_elevator"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/elevator"/>
-                <ImageView
-                    android:id="@+id/img_ramp"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/ramp"/>
-                <ImageView
-                    android:id="@+id/img_stair"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/stairs"/>
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/linearLayoutBus"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:layout_weight="1"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:visibility="gone">
-                <ListView
-                    android:id="@+id/busListView"
+                android:gravity="center">
+                <LinearLayout
+                    android:id="@+id/linearLayoutToiletRes"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10dp">
+                    <ImageView
+                        android:layout_width="0dp"
+                        android:layout_height="100dp"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginRight="8dp"
+                        android:src="@drawable/sample1"/>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_view"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linearLayoutBus"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginRight="8dp"
+                    android:visibility="gone">
+                    <TextView
+                        android:id="@+id/noBus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="도착예정 정보 없음"
+                        android:visibility="gone"
+                        android:padding="10dp"/>
+                    <ListView
+                        android:visibility="gone"
+                        android:id="@+id/busListView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
             </LinearLayout>
+
         </LinearLayout>
-
-
-
     </LinearLayout>
 
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>

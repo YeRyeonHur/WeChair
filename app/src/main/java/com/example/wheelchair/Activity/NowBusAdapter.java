@@ -41,6 +41,7 @@ public class NowBusAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         String arriveTime = buses.get(position).getTime()/60+"분 " + buses.get(position).getTime()%60+"초";
+        if(buses.get(position).getTime()<60) arriveTime = "곧 도착";
         View view = mLayoutInflater.inflate(R.layout.bus_listview_item, null);
         TextView busName = (TextView)view.findViewById(R.id.list_item_bus_num);
         TextView busTime = (TextView)view.findViewById(R.id.list_item_time);

@@ -3,12 +3,16 @@ package com.example.wheelchair.Activity;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +23,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.wheelchair.DTO.EntranceInfo;
 import com.example.wheelchair.DTO.MapPointDTO;
 import com.example.wheelchair.DTO.NowBus;
 import com.example.wheelchair.R;
@@ -43,6 +48,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Vector;
 
 
@@ -85,9 +92,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
         slidingTextView = (TextView) findViewById(R.id.slidingText);
-        img_elevator = (ImageView) findViewById(R.id.img_elevator);
+        /*img_elevator = (ImageView) findViewById(R.id.img_elevator);
         img_ramp = (ImageView) findViewById(R.id.img_ramp);
-        img_stair = (ImageView) findViewById(R.id.img_stair);
+        img_stair = (ImageView) findViewById(R.id.img_stair);*/
 
         FragmentManager fm = getSupportFragmentManager();
         MapFragment mapFragment = (MapFragment) fm.findFragmentById(R.id.map_fragment);
@@ -145,12 +152,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    @SuppressLint("ResourceAsColor")
     @Override
     public boolean onClick(@NonNull Overlay overlay) {
         LinearLayout toilet_restaurant_linearLayout, bus_linearLayout;
         toilet_restaurant_linearLayout = (LinearLayout) findViewById(R.id.linearLayoutToiletRes);
         bus_linearLayout = (LinearLayout) findViewById(R.id.linearLayoutBus);
 
+        TextView tv_low_floor_bus = (TextView)findViewById(R.id.low_floor_bus);
+        ImageView bus_re_data = (ImageView)findViewById(R.id.bus_autorenew);
         if (overlay instanceof Marker) {
             Marker marker = (Marker) overlay;
 
@@ -165,41 +175,63 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 bus_linearLayout.setVisibility(View.GONE);
                 toilet_restaurant_linearLayout.setVisibility(View.VISIBLE);
                 boolean[] infoFlag = mapPointDTO.getInfo();
-                // 승강설비
-                if (infoFlag[0]) {
-                    img_elevator.setImageAlpha(255);
-                } else {
-                    img_elevator.setImageAlpha(0);
+
+                ArrayList<EntranceInfo> entranceInfo = new ArrayList<>();
+                for(int i=0;i<2;i++){
+                    if(infoFlag[i]) entranceInfo.add(new EntranceInfo(i));
                 }
-                // 높이차이 제거, 접근로 (접근 편이)
-                if (infoFlag[1]) {
-                    img_ramp.setImageAlpha(255);
-                } else {
-                    img_ramp.setImageAlpha(0);
-                }
-                // 계단
-                if (infoFlag[2]) {
-                    img_stair.setImageAlpha(255);
-                } else {
-                    img_stair.setImageAlpha(0);
-                }
+
+
+                RecyclerView recyclerView = (RecyclerView)findViewById(R.id.recycler_view);
+                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+                linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+                recyclerView.setLayoutManager(linearLayoutManager);
+                final EntranceAdapter entranceAdapter = new EntranceAdapter(this, entranceInfo);
+                recyclerView.setAdapter(entranceAdapter);
+
+                bus_re_data.setVisibility(View.GONE);
+                tv_low_floor_bus.setVisibility(View.GONE);
 
                 slidingTextView.setText(mapPointDTO.getName());
                 slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
             }
             //버스 정류장 데이터 가져오기
             else {
+                bus_re_data.setVisibility(View.VISIBLE);
                 toilet_restaurant_linearLayout.setVisibility(View.GONE);
                 bus_linearLayout.setVisibility(View.VISIBLE);
                 ArrayList<NowBus> nowBuses = new ArrayList<NowBus>();
                 nowBuses = getDataNowBus(mapPointDTO);
-                Log.i("test",mapPointDTO.getName());
-                for(NowBus bus : nowBuses){
-                    Log.i("test",bus.getBusNum()+"  "+bus.getBusType()+"  "+bus.getTime());
+                //sort
+                Collections.sort(nowBuses,sortByTime);
+                ArrayList<NowBus> lowFloorBuses = new ArrayList<>();
+                for(NowBus nowBus : nowBuses){
+                    if(nowBus.getBusType()=="저상버스")
+                        lowFloorBuses.add(nowBus);
                 }
-                ListView listView = (ListView) findViewById(R.id.busListView);
-                final NowBusAdapter nowBusAdapter = new NowBusAdapter(this, nowBuses);
-                listView.setAdapter(nowBusAdapter);
+                TextView tv_noBus = (TextView)findViewById(R.id.noBus);
+                if(nowBuses.size()==0){
+                    tv_noBus.setVisibility(View.VISIBLE);
+                    tv_low_floor_bus.setVisibility(View.GONE);
+                }
+                else {
+                    tv_low_floor_bus.setVisibility(View.VISIBLE);
+                    tv_noBus.setVisibility(View.GONE);
+                    ListView listView = (ListView) findViewById(R.id.busListView);
+                    listView.setVisibility(View.VISIBLE);
+                    final NowBusAdapter nowBusAdapter = new NowBusAdapter(this, nowBuses);
+                    listView.setAdapter(nowBusAdapter);
+
+                    tv_low_floor_bus.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            final NowBusAdapter nowBusAdapter = new NowBusAdapter(getApplicationContext(), lowFloorBuses);
+                            listView.setAdapter(nowBusAdapter);
+                        }
+                    });
+
+                }
+
                 slidingTextView.setText(mapPointDTO.getName());
                 slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
             }
@@ -209,63 +241,75 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
+    private final static Comparator<NowBus> sortByTime = new Comparator<NowBus>() {
+        @Override
+        public int compare(NowBus o1, NowBus o2) {
+            if(o1.getTime()<o2.getTime()) return -1;
+            else if(o1.getTime()==o2.getTime()) return 0;
+            else return 1;
+        }
+    };
+
     private void getData() {
-        try {
-            URL url = new URL("http://apis.data.go.kr/B554287/DisabledPersonConvenientFacility/getDisConvFaclList?"
-                    + "&pageNo=1&numOfRows=1000&ServiceKey=lDq1uyoVjyWBPA1R3tj0E6HqMH5B4ifC1vLm%2Br%2FiHErs776rR48xQRYOOPsxMRAN7MaT6LBUFrUklPsU%2BMlB8Q%3D%3D&"); //검색 URL부분
-            InputStream is = url.openStream();
-            XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
-            XmlPullParser parser = parserCreator.newPullParser();
-            parser.setInput(new InputStreamReader(is, "UTF-8"));
+        for(int page = 10;page<20;page++){
+            try {
+                URL url = new URL("http://apis.data.go.kr/B554287/DisabledPersonConvenientFacility/getDisConvFaclList?"
+                        + "&pageNo=" + page + "&numOfRows=" + "1000" +
+                        "&ServiceKey=lDq1uyoVjyWBPA1R3tj0E6HqMH5B4ifC1vLm%2Br%2FiHErs776rR48xQRYOOPsxMRAN7MaT6LBUFrUklPsU%2BMlB8Q%3D%3D&"); //검색 URL부분
+                InputStream is = url.openStream();
+                XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
+                XmlPullParser parser = parserCreator.newPullParser();
+                parser.setInput(new InputStreamReader(is, "UTF-8"));
 
-            int parserEvent = parser.getEventType();
-            int estbdate = 0;
-            double lat = 0.0, lng = 0.0;
-            String name = null, cd = null, id = null;
-            while (parserEvent != XmlPullParser.END_DOCUMENT) {
-                switch (parserEvent) {
-                    case XmlPullParser.START_DOCUMENT:
-                        break;
-                    case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
-                        if (parser.getName().equals("estbDate")) { //title 만나면 내용을 받을수 있게 하자
-                            parser.next();
-                            estbdate = Integer.parseInt(parser.getText());
-                        } else if (parser.getName().equals("faclLat")) { //title 만나면 내용을 받을수 있게 하자
-                            parser.next();
-                            lat = Double.parseDouble(parser.getText());
-                        } else if (parser.getName().equals("faclLng")) { //title 만나면 내용을 받을수 있게 하자
-                            parser.next();
-                            lng = Double.parseDouble(parser.getText());
-                        } else if (parser.getName().equals("faclNm")) { //title 만나면 내용을 받을수 있게 하자
-                            parser.next();
-                            name = parser.getText();
-                        } else if (parser.getName().equals("faclTyCd")) {
-                            parser.next();
-                            cd = parser.getText();
-                        } else if (parser.getName().equals("wfcltId")) {
-                            parser.next();
-                            id = parser.getText();
-                        }
-                        break;
-                    case XmlPullParser.TEXT:
-                        break;
+                int parserEvent = parser.getEventType();
+                int estbdate = 0;
+                double lat = 0.0, lng = 0.0;
+                String name = null, cd = null, id = null;
+                while (parserEvent != XmlPullParser.END_DOCUMENT) {
+                    switch (parserEvent) {
+                        case XmlPullParser.START_DOCUMENT:
+                            break;
+                        case XmlPullParser.START_TAG://parser가 시작 태그를 만나면 실행
+                            if (parser.getName().equals("estbDate")) { //title 만나면 내용을 받을수 있게 하자
+                                parser.next();
+                                estbdate = Integer.parseInt(parser.getText());
+                            } else if (parser.getName().equals("faclLat")) { //title 만나면 내용을 받을수 있게 하자
+                                parser.next();
+                                lat = Double.parseDouble(parser.getText());
+                            } else if (parser.getName().equals("faclLng")) { //title 만나면 내용을 받을수 있게 하자
+                                parser.next();
+                                lng = Double.parseDouble(parser.getText());
+                            } else if (parser.getName().equals("faclNm")) { //title 만나면 내용을 받을수 있게 하자
+                                parser.next();
+                                name = parser.getText();
+                            } else if (parser.getName().equals("faclTyCd")) {
+                                parser.next();
+                                cd = parser.getText();
+                            } else if (parser.getName().equals("wfcltId")) {
+                                parser.next();
+                                id = parser.getText();
+                            }
+                            break;
+                        case XmlPullParser.TEXT:
+                            break;
 
-                    case XmlPullParser.END_TAG:
-                        if (parser.getName().equals("servList")) {
-                            MapPointDTO mapPoint = new MapPointDTO();
-                            mapPoint.setEstbDate(estbdate);
-                            mapPoint.setLatitude(lat);
-                            mapPoint.setLongitude(lng);
-                            mapPoint.setName(name);
-                            mapPoint.setWfcltId(id);
-                            mapPoint.setfaclTyCd(cd);
-                            mapPointDTOS.add(mapPoint);
-                        }
-                        break;
+                        case XmlPullParser.END_TAG:
+                            if (parser.getName().equals("servList")) {
+                                MapPointDTO mapPoint = new MapPointDTO();
+                                mapPoint.setEstbDate(estbdate);
+                                mapPoint.setLatitude(lat);
+                                mapPoint.setLongitude(lng);
+                                mapPoint.setName(name);
+                                mapPoint.setWfcltId(id);
+                                mapPoint.setfaclTyCd(cd);
+                                mapPointDTOS.add(mapPoint);
+                            }
+                            break;
+                    }
+                    parserEvent = parser.next();
                 }
-                parserEvent = parser.next();
+            } catch (Exception e) {
             }
-        } catch (Exception e) {
         }
     }
 
@@ -333,6 +377,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String wFaclId = mapPointDTO.getWfcltId();
             String url_str = "http://apis.data.go.kr/B554287/DisabledPersonConvenientFacility/getFacInfoOpenApiJpEvalInfoList?"
                     + "serviceKey=ILTqw3kO5xY0W9LmfQzwMcKHHOEqv4aXn3iBkRv6V7MDJLADpnXT4x6jJeNzx409g03rioaANmj%2BGSzTu6G9tA%3D%3D&wfcltId=" + wFaclId;
+
             URL url = new URL(url_str); //검색 URL부분
             InputStream is = url.openStream();
             XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
@@ -430,6 +475,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return buses;
     }
 
+    @SuppressLint("ResourceAsColor")
     public void buttonClicked(View v) {
         freeActiveMarkers();
         switch (v.getId()) {
@@ -441,7 +487,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (obj.getFaclTyCd().equals("UC0A13")) {
                         Marker marker = new Marker();
                         marker.setTag(obj);
-                        marker.setIconTintColor(Color.BLUE);
+                        marker.setIconTintColor(R.color.toilet);
                         setMarker(mNaverMap, marker, lat, lng);
                         activeMarkers.add(marker);
                     }
@@ -455,14 +501,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (obj.getFaclTyCd().equals("UC0B01")) {
                         Marker marker = new Marker();
                         marker.setTag(obj);
-                        marker.setIconTintColor(Color.GREEN);
+                        marker.setIconTintColor(R.color.bus);
                         setMarker(mNaverMap, marker, lat, lng);
                         activeMarkers.add(marker);
                     }
                 }
                 break;
             case R.id.station:
-                Toast.makeText(this, "station", Toast.LENGTH_SHORT).show();
                 for (MapPointDTO obj : mapPointDTOS) {
                     double lat = obj.getLatitude();
                     double lng = obj.getLongitude();
@@ -470,7 +515,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (obj.getFaclTyCd().equals("BUS")) {
                         Marker marker = new Marker();
                         marker.setTag(obj);
-                        marker.setIconTintColor(Color.RED);
+                        marker.setIconTintColor(R.color.restaurant);
                         setMarker(mNaverMap, marker, lat, lng);
                         activeMarkers.add(marker);
                     }
@@ -506,4 +551,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         activeMarkers = new Vector<Marker>();
     }
+
 }
