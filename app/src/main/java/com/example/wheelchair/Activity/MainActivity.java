@@ -10,12 +10,14 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -67,6 +69,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<Marker> markers = new ArrayList<Marker>();
     private Vector<MapPointDTO> mapPointDTOS = new Vector<MapPointDTO>();
     private Vector<Marker> activeMarkers;
+
+    private ProgressDialog progressDialog;
+
     private static final String[] PERMISSIONS = {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
@@ -74,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     int toilet_flag = 0;
     int bus_flag = 0;
     int res_flag = 0;
+    boolean loading_flag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +118,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //api
         StrictMode.enableDefaults();
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if(!loading_flag){
+            progressDialog.show();
+            progressDialog.setCanceledOnTouchOutside(false);
+            progressDialog.setCancelable(false);
+        }
     }
 
     private void setMarker(@NonNull NaverMap naverMap, Marker marker, double lat, double lng) {
@@ -134,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
         UiSettings uiSettings = naverMap.getUiSettings();
         uiSettings.setLocationButtonEnabled(true);
-
+        loading_flag = true;
+        progressDialog.dismiss();
 
         // 카메라 이동 되면 호출 되는 이벤트
         naverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
@@ -224,12 +239,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         @Override
                         public void onClick(View v) {
                             final NowBusAdapter nowBusAdapter = new NowBusAdapter(getApplicationContext(), lowFloorBuses);
+                            nowBusAdapter.notifyDataSetChanged();
                             listView.setAdapter(nowBusAdapter);
                         }
                     });
 
                 }
-
                 slidingTextView.setText(mapPointDTO.getName());
                 slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
             }
