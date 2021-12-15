@@ -20,34 +20,32 @@ import com.example.wheelchair.DTO.NowBus;
 
 import java.util.ArrayList;
 
-public class EntranceAdapter extends RecyclerView.Adapter<EntranceAdapter.MyViewHolder> {
+public class EntranceAdapter extends BaseAdapter {
 
     Context mContext = null;
     LayoutInflater mLayoutInflater = null;
     ArrayList<EntranceInfo> info;
+    boolean[] info_flag = new boolean[5];
 
-    public EntranceAdapter(Context context, ArrayList<EntranceInfo> data){
+    public EntranceAdapter(Context context, ArrayList<EntranceInfo> entranceInfos) {
         mContext = context;
-        info = data;
+        info = entranceInfos;
         mLayoutInflater = LayoutInflater.from(mContext);
     }
 
-    public void addItem(EntranceInfo i){
+
+    public void addItem(EntranceInfo i) {
         info.add(i);
     }
 
-    @NonNull
     @Override
-    public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View view = inflater.inflate(R.layout.entrance_list_view_item,parent,false);
-        return new MyViewHolder(view);
+    public int getCount() {
+        return info.size();
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
-        EntranceInfo i = info.get(position);
-        holder.setItem(i);
+    public Object getItem(int position) {
+        return info.get(position);
     }
 
     @Override
@@ -55,25 +53,29 @@ public class EntranceAdapter extends RecyclerView.Adapter<EntranceAdapter.MyView
         return position;
     }
 
-    @Override
-    public int getItemCount() {
-        return info.size();
+
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View view = mLayoutInflater.inflate(R.layout.entrance_list_view_item, null);
+        ImageView list_item_image = (ImageView) view.findViewById(R.id.list_item_image);
+        TextView list_item_text = (TextView) view.findViewById(R.id.list_item_text);
+        int tmp = info.get(position).getType();
+        if (tmp == 0) {
+            list_item_image.setImageResource(R.drawable.ramp);
+            list_item_text.setText("경사로");
+        } else if (tmp == 1) {
+            list_item_image.setImageResource(R.drawable.toilet1);
+            list_item_text.setText("대변기");
+        } else if (tmp == 2) {
+            list_item_image.setImageResource(R.drawable.elevator);
+            list_item_text.setText("엘리베이터");
+        } else if (tmp == 3) {
+            list_item_image.setImageResource(R.drawable.parking);
+            list_item_text.setText("장애인 전용 주차장");
+        } else if (tmp == 4) {
+            list_item_image.setImageResource(R.drawable.wheelchair);
+            list_item_text.setText("접근로 및 높이차이 제거");
+        }
+        return view;
     }
 
-
-    public static class MyViewHolder extends RecyclerView.ViewHolder{
-        ImageView imageView;
-        public MyViewHolder(@NonNull View itemView) {
-            super(itemView);
-             imageView = itemView.findViewById(R.id.list_item_image);
-        }
-        public void setItem(EntranceInfo info){
-            int type = info.getType();
-            if(type==0){
-                imageView.setImageResource(R.drawable.elevator);
-            }
-            else if (type==1) imageView.setImageResource(R.drawable.ramp);
-            else if (type==2) imageView.setImageResource(R.drawable.stairs);
-        }
-    }
 }

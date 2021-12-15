@@ -16,9 +16,11 @@ import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,13 +55,9 @@ import java.util.Comparator;
 import java.util.Vector;
 
 
-
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, Overlay.OnClickListener {
     private static final int PERMISSION_REQUEST_CODE = 100;
     Button toiletButton, busStationButton, restaurantButton;
-    ImageView img_ramp;
-    ImageView img_elevator;
-    ImageView img_stair;
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
     private InfoWindow mInfoWindow;
@@ -73,10 +71,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
     };
+    int toilet_flag = 0;
+    int bus_flag = 0;
+    int res_flag = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.main_activitiy);
 
         toiletButton = (Button) findViewById(R.id.toilet);
@@ -85,9 +88,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         slidingPaneLayout = (SlidingUpPanelLayout) findViewById(R.id.slidingPanel);
         dragView = (LinearLayout) findViewById(R.id.dragView);
         dragView.setClickable(false);
-        slidingPaneLayout.setFadeOnClickListener(new View.OnClickListener(){
+        slidingPaneLayout.setFadeOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
@@ -122,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(@NonNull NaverMap naverMap) {
         getData();
         getBusData();
+        kdata();
         LatLng initialPosition = new LatLng(35.88754486390442, 128.6117392305679);
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(initialPosition);
         naverMap.moveCamera(cameraUpdate);
@@ -159,38 +163,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         toilet_restaurant_linearLayout = (LinearLayout) findViewById(R.id.linearLayoutToiletRes);
         bus_linearLayout = (LinearLayout) findViewById(R.id.linearLayoutBus);
 
-        TextView tv_low_floor_bus = (TextView)findViewById(R.id.low_floor_bus);
-        ImageView bus_re_data = (ImageView)findViewById(R.id.bus_autorenew);
+        TextView tv_low_floor_bus = (TextView) findViewById(R.id.low_floor_bus);
+        ImageView bus_re_data = (ImageView) findViewById(R.id.bus_autorenew);
         if (overlay instanceof Marker) {
             Marker marker = (Marker) overlay;
 
             MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
-
 
             if (mapPointDTO.getFaclTyCd() != "BUS") {
                 if (mapPointDTO.hasInfo() == false) {
                     //화장실, 음식점 출입 정보
                     getDataFaclInfo(mapPointDTO);
                 }
-                bus_linearLayout.setVisibility(View.GONE);
-                toilet_restaurant_linearLayout.setVisibility(View.VISIBLE);
-                boolean[] infoFlag = mapPointDTO.getInfo();
-
                 ArrayList<EntranceInfo> entranceInfo = new ArrayList<>();
-                for(int i=0;i<2;i++){
-                    if(infoFlag[i]) entranceInfo.add(new EntranceInfo(i));
+                boolean[] infoFlag = mapPointDTO.getInfo();
+                for (int i = 0; i < 5; i++) {
+                    if (infoFlag[i] == true) {
+                        entranceInfo.add(new EntranceInfo(i));
+                    }
                 }
-
-
-                RecyclerView recyclerView = (RecyclerView)findViewById(R.id.recycler_view);
-                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
-                linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
-                recyclerView.setLayoutManager(linearLayoutManager);
-                final EntranceAdapter entranceAdapter = new EntranceAdapter(this, entranceInfo);
-                recyclerView.setAdapter(entranceAdapter);
-
-                bus_re_data.setVisibility(View.GONE);
+                bus_linearLayout.setVisibility(View.GONE);
                 tv_low_floor_bus.setVisibility(View.GONE);
+                bus_re_data.setVisibility(View.GONE);
+                toilet_restaurant_linearLayout.setVisibility(View.VISIBLE);
+                ListView listView = (ListView) findViewById(R.id.toilet_res_ListView);
+                listView.setVisibility(View.VISIBLE);
+                final EntranceAdapter entranceAdapter = new EntranceAdapter(this, entranceInfo);
+                listView.setAdapter(entranceAdapter);
 
                 slidingTextView.setText(mapPointDTO.getName());
                 slidingPaneLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
@@ -203,18 +202,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 ArrayList<NowBus> nowBuses = new ArrayList<NowBus>();
                 nowBuses = getDataNowBus(mapPointDTO);
                 //sort
-                Collections.sort(nowBuses,sortByTime);
+                Collections.sort(nowBuses, sortByTime);
                 ArrayList<NowBus> lowFloorBuses = new ArrayList<>();
-                for(NowBus nowBus : nowBuses){
-                    if(nowBus.getBusType()=="저상버스")
+                for (NowBus nowBus : nowBuses) {
+                    if (nowBus.getBusType() == "저상버스")
                         lowFloorBuses.add(nowBus);
                 }
-                TextView tv_noBus = (TextView)findViewById(R.id.noBus);
-                if(nowBuses.size()==0){
+                TextView tv_noBus = (TextView) findViewById(R.id.noBus);
+                if (nowBuses.size() == 0) {
                     tv_noBus.setVisibility(View.VISIBLE);
                     tv_low_floor_bus.setVisibility(View.GONE);
-                }
-                else {
+                } else {
                     tv_low_floor_bus.setVisibility(View.VISIBLE);
                     tv_noBus.setVisibility(View.GONE);
                     ListView listView = (ListView) findViewById(R.id.busListView);
@@ -244,14 +242,210 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final static Comparator<NowBus> sortByTime = new Comparator<NowBus>() {
         @Override
         public int compare(NowBus o1, NowBus o2) {
-            if(o1.getTime()<o2.getTime()) return -1;
-            else if(o1.getTime()==o2.getTime()) return 0;
+            if (o1.getTime() < o2.getTime()) return -1;
+            else if (o1.getTime() == o2.getTime()) return 0;
             else return 1;
         }
     };
-
+    private void kdata(){
+        MapPointDTO mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.88772056077337);
+        mapPoint.setLongitude(128.61166490592902);
+        mapPoint.setName("경북대학교 IT 2호관");
+        boolean[] flag = new boolean[5];
+        flag[0]=true;
+        flag[1]=false;
+        flag[2]=false;
+        flag[3]=true;
+        flag[4]=true;
+        mapPoint.setInfo(flag);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.887478717604615);
+        mapPoint.setLongitude(128.6127158402182);
+        mapPoint.setName("경북대학교 IT 1호관");
+        boolean[] flag1 = new boolean[5];
+        flag1[0]=true;
+        flag1[1]=true;
+        flag1[2]=true;
+        flag1[3]=true;
+        flag1[4]=true;
+        mapPoint.setInfo(flag1);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.889065493084395);
+        mapPoint.setLongitude(128.61447372826044);
+        mapPoint.setName("경북대학교 복지관");
+        boolean[] flag2 = new boolean[5];
+        flag2[0]=true;
+        flag2[1]=true;
+        flag2[2]=true;
+        flag2[3]=true;
+        flag2[4]=true;
+        mapPoint.setInfo(flag2);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.88810008443131);
+        mapPoint.setLongitude(128.61123623804312);
+        mapPoint.setName("경북대학교 IT융복합관");
+        boolean[] flag3 = new boolean[5];
+        flag3[0]=true;
+        flag3[1]=true;
+        flag3[2]=true;
+        flag3[3]=true;
+        flag3[4]=true;
+        mapPoint.setInfo(flag3);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.888788690975296);
+        mapPoint.setLongitude(128.61364921554974);
+        mapPoint.setName("경북대학교 박물관");
+        boolean[] flag4 = new boolean[5];
+        flag4[0]=true;
+        flag4[1]=true;
+        flag4[2]=true;
+        flag4[3]=false;
+        flag4[4]=true;
+        mapPoint.setInfo(flag4);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.89198024097426);
+        mapPoint.setLongitude(128.61125161671453);
+        mapPoint.setName("경북대학교 글로벌프라자");
+        boolean[] flag5 = new boolean[5];
+        flag5[0]=false;
+        flag5[1]=true;
+        flag5[2]=true;
+        flag5[3]=false;
+        flag5[4]=false;
+        mapPoint.setInfo(flag5);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.888202095991325);
+        mapPoint.setLongitude(128.61045437522122);
+        mapPoint.setName("경북대학교 IT 3호관");
+        boolean[] flag6 = new boolean[5];
+        flag6[0]=true;
+        flag6[1]=true;
+        flag6[2]=true;
+        flag6[3]=false;
+        flag6[4]=false;
+        mapPoint.setInfo(flag6);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.88810008443131);
+        mapPoint.setLongitude(128.61123623804312);
+        mapPoint.setName("경북대학교 IT융복합관");
+        boolean[] flag7 = new boolean[5];
+        flag7[0]=true;
+        flag7[1]=true;
+        flag7[2]=true;
+        flag7[3]=true;
+        flag7[4]=true;
+        mapPoint.setInfo(flag7);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.884717310984115);
+        mapPoint.setLongitude(128.61038979722474);
+        mapPoint.setName("대현어린이공원");
+        boolean[] flag8 = new boolean[5];
+        flag8[0]=false;
+        flag8[1]=true;
+        flag8[2]=false;
+        flag8[3]=false;
+        flag8[4]=true;
+        mapPoint.setInfo(flag8);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.88402960531602);
+        mapPoint.setLongitude(128.61223115185197);
+        mapPoint.setName("신암초등학교");
+        boolean[] flag9 = new boolean[5];
+        flag9[0]=true;
+        flag9[1]=true;
+        flag9[2]=false;
+        flag9[3]=true;
+        flag9[4]=true;
+        mapPoint.setInfo(flag9);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.88301572848548);
+        mapPoint.setLongitude(128.61419795962772);
+        mapPoint.setName("대구공업고등학교");
+        boolean[] flag10 = new boolean[5];
+        flag10[0]=true;
+        flag10[1]=true;
+        flag10[2]=true;
+        flag10[3]=true;
+        flag10[4]=true;
+        mapPoint.setInfo(flag10);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.89368644748507);
+        mapPoint.setLongitude(128.60341204840168);
+        mapPoint.setName("대구체육관");
+        boolean[] flag11 = new boolean[5];
+        flag11[0]=true;
+        flag11[1]=true;
+        flag11[2]=true;
+        flag11[3]=true;
+        flag11[4]=true;
+        mapPoint.setInfo(flag11);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.89422187888365);
+        mapPoint.setLongitude(128.60691114298731);
+        mapPoint.setName("산격초등학교");
+        boolean[] flag12 = new boolean[5];
+        flag12[0]=true;
+        flag12[1]=true;
+        flag12[2]=false;
+        flag12[3]=true;
+        flag12[4]=true;
+        mapPoint.setInfo(flag12);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.89763428949772);
+        mapPoint.setLongitude(128.60713221951193);
+        mapPoint.setName("개나리공원");
+        boolean[] flag13 = new boolean[5];
+        flag13[0]=true;
+        flag13[1]=true;
+        flag13[2]=true;
+        flag13[3]=false;
+        flag13[4]=false;
+        mapPoint.setInfo(flag13);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+        mapPoint = new MapPointDTO();
+        mapPoint.setLatitude(35.8926474016669);
+        mapPoint.setLongitude(128.59884707581702);
+        mapPoint.setName("대구광역시청 별관");
+        boolean[] flag14 = new boolean[5];
+        flag14[0]=true;
+        flag14[1]=true;
+        flag14[2]=true;
+        flag14[3]=true;
+        flag14[4]=false;
+        mapPoint.setInfo(flag14);
+        mapPoint.setfaclTyCd("UC0A13");
+        mapPointDTOS.add(mapPoint);
+    }
     private void getData() {
-        for(int page = 10;page<20;page++){
+        for (int page = 10; page < 20; page++) {
             try {
                 URL url = new URL("http://apis.data.go.kr/B554287/DisabledPersonConvenientFacility/getDisConvFaclList?"
                         + "&pageNo=" + page + "&numOfRows=" + "1000" +
@@ -368,7 +562,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 parserEvent = parser.next();
             }
         } catch (Exception e) {
-            Log.i("test",String.valueOf(e));
+            Log.i("test", String.valueOf(e));
         }
     }
 
@@ -395,14 +589,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if (parser.getName().equals("evalInfo")) { //title 만나면 내용을 받을수 있게 하자
                             parser.next();
                             info = parser.getText();
-                            if (info.contains("승강설비")) {
+                            //경사로
+                            if (info.contains("경사로")) {
                                 info_flag_list[0] = true;
                             }
-                            if (info.contains("높이차이 제거") || info.contains("접근로")) {
+                            //대변기
+                            if (info.contains("대변기")) {
                                 info_flag_list[1] = true;
                             }
-                            if (info.contains("계단")) {
+                            //엘리베이터
+                            if (info.contains("엘리베이터")) {
                                 info_flag_list[2] = true;
+                            }
+                            //장애인 주차장
+                            if (info.contains("장애인전용주차구역")) {
+                                info_flag_list[3] = true;
+                            }
+                            //접근로
+                            if (info.contains("높이차이 제거") || info.contains("접근로")) {
+                                info_flag_list[4] = true;
                             }
                         }
                         break;
@@ -427,7 +632,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String NodeCd = mapPointDTO.getWfcltId();
             String url_str = "http://openapi.tago.go.kr/openapi/service/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList?serviceKey=L2VM7f1PPrN4%2FiRYxA9H%2F47FcZ6L8Mp72fB67Gqj0YjzlKQ%2FgmqtTURCNbQf7e2jIaMkdordccx0dbQx3UmPeg%3D%3D&cityCode=22&" +
                     "nodeId=" + NodeCd;
-            Log.i("test",NodeCd);
+            Log.i("test", NodeCd);
             URL url = new URL(url_str); //검색 URL부분
             InputStream is = url.openStream();
             XmlPullParserFactory parserCreator = XmlPullParserFactory.newInstance();
@@ -458,9 +663,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     case XmlPullParser.END_TAG:
                         if (parser.getName().equals("item")) {
-                            Log.i("test",busName+"  "+arriveTime+"  "+busType);
+                            Log.i("test", busName + "  " + arriveTime + "  " + busType);
 
-                            NowBus nowBus = new NowBus(busName,arriveTime,busType);
+                            NowBus nowBus = new NowBus(busName, arriveTime, busType);
                             nowBus.setBusNum(busName);
                             buses.add(nowBus);
                         }
@@ -469,7 +674,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 parserEvent = parser.next();
             }
         } catch (Exception e) {
-            Log.i("test",String.valueOf(e));
+            Log.i("test", String.valueOf(e));
         }
 
         return buses;
@@ -478,8 +683,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @SuppressLint("ResourceAsColor")
     public void buttonClicked(View v) {
         freeActiveMarkers();
+
         switch (v.getId()) {
             case R.id.toilet:
+                bus_flag=0;
+                busStationButton.setBackgroundResource(R.drawable.round_button);
+                res_flag=0;
+                restaurantButton.setBackgroundResource(R.drawable.round_button);
+                if (toilet_flag == 0) {
+                    toiletButton.setBackgroundResource(R.drawable.round_button_pressed);
+                    toilet_flag = 1;
+                } else {
+                    toiletButton.setBackgroundResource(R.drawable.round_button);
+                    toilet_flag = 0;
+                }
                 for (MapPointDTO obj : mapPointDTOS) {
                     double lat = obj.getLatitude();
                     double lng = obj.getLongitude();
@@ -494,6 +711,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 break;
             case R.id.restaurant:
+                bus_flag=0;
+                busStationButton.setBackgroundResource(R.drawable.round_button);
+                toilet_flag=0;
+                toiletButton.setBackgroundResource(R.drawable.round_button);
+                if (res_flag == 0) {
+                    restaurantButton.setBackgroundResource(R.drawable.round_button_pressed);
+                    res_flag = 1;
+                } else {
+                    restaurantButton.setBackgroundResource(R.drawable.round_button);
+                    res_flag = 0;
+                }
                 for (MapPointDTO obj : mapPointDTOS) {
                     double lat = obj.getLatitude();
                     double lng = obj.getLongitude();
@@ -508,6 +736,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 break;
             case R.id.station:
+                res_flag=0;
+                restaurantButton.setBackgroundResource(R.drawable.round_button);
+                toilet_flag=0;
+                toiletButton.setBackgroundResource(R.drawable.round_button);
+                if (bus_flag == 0) {
+                    busStationButton.setBackgroundResource(R.drawable.round_button_pressed);
+                    bus_flag = 1;
+                } else {
+                    busStationButton.setBackgroundResource(R.drawable.round_button);
+                    bus_flag = 0;
+                }
                 for (MapPointDTO obj : mapPointDTOS) {
                     double lat = obj.getLatitude();
                     double lng = obj.getLongitude();

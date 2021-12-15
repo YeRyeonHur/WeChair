@@ -11,10 +11,11 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_main"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:networkSecurityConfig="@xml/network_config"
         android:theme="@style/Theme.WheelChair">
+
         <meta-data
             android:name="com.google.android.actions"
             android:resource="@xml/network_config" />
@@ -22,7 +23,8 @@
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="u0lsfp0ert" />
 
-        <activity android:name=".Activity.MainActivity">
+        <activity android:name=".Activity.MainActivity"></activity>
+            <activity android:name=".Activity.splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

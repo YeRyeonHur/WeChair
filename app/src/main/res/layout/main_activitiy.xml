@@ -37,48 +37,58 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             tools:ignore="MissingConstraints">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+            <HorizontalScrollView
+                android:layout_marginTop="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="none">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/toilet"
-                    android:layout_width="100dp"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginLeft="10dp"
-                    android:text="화장실"
-                    android:clickable="true"
-                    android:onClick="buttonClicked"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/toilet"/>
-                <Button
-                    android:id="@+id/station"
-                    android:layout_width="100dp"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginLeft="10dp"
-                    android:text="저상버스"
-                    android:clickable="true"
-                    android:onClick="buttonClicked"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/bus"/>
-                <Button
-                    android:id="@+id/restaurant"
-                    android:layout_width="100dp"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginLeft="10dp"
-                    android:text="음식점"
-                    android:clickable="true"
-                    android:onClick="buttonClicked"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/restaurant"/>
-            </LinearLayout>
-
+                    <Button
+                        android:id="@+id/toilet"
+                        android:layout_width="120dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginLeft="15dp"
+                        android:padding="10dp"
+                        android:drawableLeft="@drawable/toilet_xml"
+                        android:text="화장실"
+                        android:clickable="true"
+                        android:onClick="buttonClicked"
+                        android:textColor="#000000"
+                        android:background="@drawable/round_button" />
+                    <Button
+                        android:id="@+id/station"
+                        android:layout_width="120dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginLeft="15dp"
+                        android:padding="10dp"
+                        android:text="저상버스"
+                        android:clickable="true"
+                        android:onClick="buttonClicked"
+                        android:drawableLeft="@drawable/bus_xml"
+                        android:background="@drawable/round_button"
+                        android:textColor="#000000" />
+                    <Button
+                        android:id="@+id/restaurant"
+                        android:layout_width="120dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginLeft="15dp"
+                        android:padding="10dp"
+                        android:background="@drawable/round_button"
+                        android:drawableLeft="@drawable/restaurant_xml"
+                        android:text="음식점"
+                        android:clickable="true"
+                        android:onClick="buttonClicked"
+                        android:textColor="#000000" />
+                </LinearLayout>
+            </HorizontalScrollView>
         </LinearLayout>
-
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -144,18 +154,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingBottom="10dp">
-                    <ImageView
-                        android:layout_width="0dp"
-                        android:layout_height="100dp"
-                        android:layout_weight="1"
-                        android:layout_marginLeft="8dp"
-                        android:layout_marginRight="8dp"
-                        android:src="@drawable/sample1"/>
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recycler_view"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"/>
+                    <ListView
+                        android:visibility="gone"
+                        android:id="@+id/toilet_res_ListView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
                 <LinearLayout

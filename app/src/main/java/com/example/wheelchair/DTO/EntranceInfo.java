@@ -2,7 +2,6 @@ package com.example.wheelchair.DTO;
 
 public class EntranceInfo {
     int type;
-
     public EntranceInfo(int type) {
         this.type = type;
     }
