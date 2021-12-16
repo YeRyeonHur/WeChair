@@ -37,58 +37,75 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             tools:ignore="MissingConstraints">
+
             <HorizontalScrollView
-                android:layout_marginTop="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="30dp"
                 android:scrollbars="none">
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_gravity="center_vertical">
 
                     <Button
                         android:id="@+id/toilet"
                         android:layout_width="100dp"
                         android:layout_height="35dp"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginLeft="15dp"
-                        android:padding="8dp"
-                        android:drawableLeft="@drawable/toilet_xml"
-                        android:text="화장실"
+                        android:layout_marginLeft="10dp"
+                        android:background="@drawable/round_button"
                         android:clickable="true"
+                        android:drawableLeft="@drawable/toilet_xml"
                         android:onClick="buttonClicked"
+                        android:padding="8dp"
+                        android:text="화장실"
                         android:textColor="#000000"
-                        android:textSize="13sp"
-                        android:background="@drawable/round_button" />
+                        android:textSize="13sp" />
+
                     <Button
                         android:id="@+id/station"
                         android:layout_width="100dp"
                         android:layout_height="35dp"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginLeft="15dp"
+                        android:layout_marginLeft="10dp"
+                        android:background="@drawable/round_button"
+                        android:clickable="true"
+                        android:drawableLeft="@drawable/bus_xml"
+                        android:onClick="buttonClicked"
                         android:padding="8dp"
                         android:text="저상버스"
-                        android:clickable="true"
-                        android:onClick="buttonClicked"
-                        android:drawableLeft="@drawable/bus_xml"
-                        android:background="@drawable/round_button"
-                        android:textSize="13sp"
-                        android:textColor="#000000" />
+                        android:textColor="#000000"
+                        android:textSize="13sp" />
+
                     <Button
                         android:id="@+id/restaurant"
                         android:layout_width="100dp"
                         android:layout_height="35dp"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginLeft="15dp"
-                        android:padding="8dp"
+                        android:layout_marginLeft="10dp"
                         android:background="@drawable/round_button"
-                        android:drawableLeft="@drawable/restaurant_xml"
-                        android:text="음식점"
                         android:clickable="true"
+                        android:drawableLeft="@drawable/restaurant_xml"
                         android:onClick="buttonClicked"
-                        android:textSize="13sp"
-                        android:textColor="#000000" />
+                        android:padding="8dp"
+                        android:text="음식점"
+                        android:textColor="#000000"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/navi"
+                        android:layout_width="100dp"
+                        android:layout_height="35dp"
+                        android:layout_marginLeft="10dp"
+                        android:background="@drawable/round_button"
+                        android:clickable="true"
+                        android:drawableLeft="@drawable/navigate_xml"
+                        android:padding="8dp"
+                        android:text="길찾기"
+                        android:textColor="#000000"
+                        android:onClick="navibuttonclicked"
+                        android:textSize="13sp" />
                 </LinearLayout>
             </HorizontalScrollView>
         </LinearLayout>

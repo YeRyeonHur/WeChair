@@ -8,9 +8,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Address;
+import android.location.Geocoder;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
@@ -48,18 +53,25 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Vector;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, Overlay.OnClickListener {
+    public static final int LOCATION_PERMISSION_REQUEST_CODE = 1000;
+    private FusedLocationSource locationSource;
+    private Geocoder geocoder;
     private static final int PERMISSION_REQUEST_CODE = 100;
-    Button toiletButton, busStationButton, restaurantButton;
+    Button toiletButton, busStationButton, restaurantButton, navi;
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
     private InfoWindow mInfoWindow;
@@ -69,7 +81,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<Marker> markers = new ArrayList<Marker>();
     private Vector<MapPointDTO> mapPointDTOS = new Vector<MapPointDTO>();
     private Vector<Marker> activeMarkers;
-
+    LatLng destLatLng = new LatLng(0.0, 0.0);  // 클릭한 마커 위치
+    LatLng currentLatLng = new LatLng(0.0, 0.0);  //현재 위치
     private ProgressDialog progressDialog;
 
     private static final String[] PERMISSIONS = {
@@ -91,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         toiletButton = (Button) findViewById(R.id.toilet);
         busStationButton = (Button) findViewById(R.id.station);
         restaurantButton = (Button) findViewById(R.id.restaurant);
+        navi = (Button) findViewById(R.id.navi);
         slidingPaneLayout = (SlidingUpPanelLayout) findViewById(R.id.slidingPanel);
         dragView = (LinearLayout) findViewById(R.id.dragView);
         dragView.setClickable(false);
@@ -101,9 +115,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
         slidingTextView = (TextView) findViewById(R.id.slidingText);
-        /*img_elevator = (ImageView) findViewById(R.id.img_elevator);
-        img_ramp = (ImageView) findViewById(R.id.img_ramp);
-        img_stair = (ImageView) findViewById(R.id.img_stair);*/
 
         FragmentManager fm = getSupportFragmentManager();
         MapFragment mapFragment = (MapFragment) fm.findFragmentById(R.id.map_fragment);
@@ -121,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         progressDialog = new ProgressDialog(this);
         progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        if(!loading_flag){
+        if (!loading_flag) {
             progressDialog.show();
             progressDialog.setCanceledOnTouchOutside(false);
             progressDialog.setCancelable(false);
@@ -184,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Marker marker = (Marker) overlay;
 
             MapPointDTO mapPointDTO = (MapPointDTO) marker.getTag();
-
+            destLatLng = new LatLng(mapPointDTO.getLatitude(), mapPointDTO.getLongitude());
             if (mapPointDTO.getFaclTyCd() != "BUS") {
                 if (mapPointDTO.hasInfo() == false) {
                     //화장실, 음식점 출입 정보
@@ -262,17 +273,43 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             else return 1;
         }
     };
-    private void kdata(){
+
+    public void navibuttonclicked(View v) throws IOException {
+        if(destLatLng.latitude==0.0 || destLatLng.longitude==0.0){
+            return;
+        }
+        String current_addr="경북대학교 IT 2호관";
+        String dest_addr;
+        List<Address> dest_address = null;
+        Geocoder geocoder = new Geocoder(this);
+        dest_address=geocoder.getFromLocation(destLatLng.latitude,destLatLng.longitude,1);
+        dest_addr=dest_address.get(0).getAddressLine(0).toString();
+        String dest_utf8=new String(dest_addr.getBytes("UTF-16"),"UTF-8");
+        String current_utf8=new String(current_addr.getBytes("UTF-16"),"UTF-8");
+        String currentLatitude = String.valueOf(currentLatLng.latitude);
+        String currentLongitude = String.valueOf(currentLatLng.longitude);
+        String destLatitude = String.valueOf(destLatLng.latitude);
+        String destLongitude = String.valueOf(destLatLng.longitude);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("nmap://route/walk?slat=35.88782334898758&slng=128.61168685742604" +
+                "&sname=" + current_addr +
+                "&dlat=" + destLatitude + "&dlng=" + destLongitude +
+                "&dname="+ dest_addr +
+                "&appname=com.example.wheelchair"));
+        startActivity(intent);
+    }
+
+
+    private void kdata() {
         MapPointDTO mapPoint = new MapPointDTO();
         mapPoint.setLatitude(35.88772056077337);
         mapPoint.setLongitude(128.61166490592902);
         mapPoint.setName("경북대학교 IT 2호관");
         boolean[] flag = new boolean[5];
-        flag[0]=true;
-        flag[1]=false;
-        flag[2]=false;
-        flag[3]=true;
-        flag[4]=true;
+        flag[0] = true;
+        flag[1] = false;
+        flag[2] = false;
+        flag[3] = true;
+        flag[4] = true;
         mapPoint.setInfo(flag);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -281,11 +318,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.6127158402182);
         mapPoint.setName("경북대학교 IT 1호관");
         boolean[] flag1 = new boolean[5];
-        flag1[0]=true;
-        flag1[1]=true;
-        flag1[2]=true;
-        flag1[3]=true;
-        flag1[4]=true;
+        flag1[0] = true;
+        flag1[1] = true;
+        flag1[2] = true;
+        flag1[3] = true;
+        flag1[4] = true;
         mapPoint.setInfo(flag1);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -294,11 +331,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61447372826044);
         mapPoint.setName("경북대학교 복지관");
         boolean[] flag2 = new boolean[5];
-        flag2[0]=true;
-        flag2[1]=true;
-        flag2[2]=true;
-        flag2[3]=true;
-        flag2[4]=true;
+        flag2[0] = true;
+        flag2[1] = true;
+        flag2[2] = true;
+        flag2[3] = true;
+        flag2[4] = true;
         mapPoint.setInfo(flag2);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -307,11 +344,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61123623804312);
         mapPoint.setName("경북대학교 IT융복합관");
         boolean[] flag3 = new boolean[5];
-        flag3[0]=true;
-        flag3[1]=true;
-        flag3[2]=true;
-        flag3[3]=true;
-        flag3[4]=true;
+        flag3[0] = true;
+        flag3[1] = true;
+        flag3[2] = true;
+        flag3[3] = true;
+        flag3[4] = true;
         mapPoint.setInfo(flag3);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -320,11 +357,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61364921554974);
         mapPoint.setName("경북대학교 박물관");
         boolean[] flag4 = new boolean[5];
-        flag4[0]=true;
-        flag4[1]=true;
-        flag4[2]=true;
-        flag4[3]=false;
-        flag4[4]=true;
+        flag4[0] = true;
+        flag4[1] = true;
+        flag4[2] = true;
+        flag4[3] = false;
+        flag4[4] = true;
         mapPoint.setInfo(flag4);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -333,11 +370,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61125161671453);
         mapPoint.setName("경북대학교 글로벌프라자");
         boolean[] flag5 = new boolean[5];
-        flag5[0]=false;
-        flag5[1]=true;
-        flag5[2]=true;
-        flag5[3]=false;
-        flag5[4]=false;
+        flag5[0] = false;
+        flag5[1] = true;
+        flag5[2] = true;
+        flag5[3] = false;
+        flag5[4] = false;
         mapPoint.setInfo(flag5);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -346,11 +383,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61045437522122);
         mapPoint.setName("경북대학교 IT 3호관");
         boolean[] flag6 = new boolean[5];
-        flag6[0]=true;
-        flag6[1]=true;
-        flag6[2]=true;
-        flag6[3]=false;
-        flag6[4]=false;
+        flag6[0] = true;
+        flag6[1] = true;
+        flag6[2] = true;
+        flag6[3] = false;
+        flag6[4] = false;
         mapPoint.setInfo(flag6);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -359,11 +396,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61123623804312);
         mapPoint.setName("경북대학교 IT융복합관");
         boolean[] flag7 = new boolean[5];
-        flag7[0]=true;
-        flag7[1]=true;
-        flag7[2]=true;
-        flag7[3]=true;
-        flag7[4]=true;
+        flag7[0] = true;
+        flag7[1] = true;
+        flag7[2] = true;
+        flag7[3] = true;
+        flag7[4] = true;
         mapPoint.setInfo(flag7);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -372,11 +409,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61038979722474);
         mapPoint.setName("대현어린이공원");
         boolean[] flag8 = new boolean[5];
-        flag8[0]=false;
-        flag8[1]=true;
-        flag8[2]=false;
-        flag8[3]=false;
-        flag8[4]=true;
+        flag8[0] = false;
+        flag8[1] = true;
+        flag8[2] = false;
+        flag8[3] = false;
+        flag8[4] = true;
         mapPoint.setInfo(flag8);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -385,11 +422,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61223115185197);
         mapPoint.setName("신암초등학교");
         boolean[] flag9 = new boolean[5];
-        flag9[0]=true;
-        flag9[1]=true;
-        flag9[2]=false;
-        flag9[3]=true;
-        flag9[4]=true;
+        flag9[0] = true;
+        flag9[1] = true;
+        flag9[2] = false;
+        flag9[3] = true;
+        flag9[4] = true;
         mapPoint.setInfo(flag9);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -398,11 +435,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.61419795962772);
         mapPoint.setName("대구공업고등학교");
         boolean[] flag10 = new boolean[5];
-        flag10[0]=true;
-        flag10[1]=true;
-        flag10[2]=true;
-        flag10[3]=true;
-        flag10[4]=true;
+        flag10[0] = true;
+        flag10[1] = true;
+        flag10[2] = true;
+        flag10[3] = true;
+        flag10[4] = true;
         mapPoint.setInfo(flag10);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -411,11 +448,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.60341204840168);
         mapPoint.setName("대구체육관");
         boolean[] flag11 = new boolean[5];
-        flag11[0]=true;
-        flag11[1]=true;
-        flag11[2]=true;
-        flag11[3]=true;
-        flag11[4]=true;
+        flag11[0] = true;
+        flag11[1] = true;
+        flag11[2] = true;
+        flag11[3] = true;
+        flag11[4] = true;
         mapPoint.setInfo(flag11);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -424,11 +461,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.60691114298731);
         mapPoint.setName("산격초등학교");
         boolean[] flag12 = new boolean[5];
-        flag12[0]=true;
-        flag12[1]=true;
-        flag12[2]=false;
-        flag12[3]=true;
-        flag12[4]=true;
+        flag12[0] = true;
+        flag12[1] = true;
+        flag12[2] = false;
+        flag12[3] = true;
+        flag12[4] = true;
         mapPoint.setInfo(flag12);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -437,11 +474,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.60713221951193);
         mapPoint.setName("개나리공원");
         boolean[] flag13 = new boolean[5];
-        flag13[0]=true;
-        flag13[1]=true;
-        flag13[2]=true;
-        flag13[3]=false;
-        flag13[4]=false;
+        flag13[0] = true;
+        flag13[1] = true;
+        flag13[2] = true;
+        flag13[3] = false;
+        flag13[4] = false;
         mapPoint.setInfo(flag13);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
@@ -450,15 +487,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapPoint.setLongitude(128.59884707581702);
         mapPoint.setName("대구광역시청 별관");
         boolean[] flag14 = new boolean[5];
-        flag14[0]=true;
-        flag14[1]=true;
-        flag14[2]=true;
-        flag14[3]=true;
-        flag14[4]=false;
+        flag14[0] = true;
+        flag14[1] = true;
+        flag14[2] = true;
+        flag14[3] = true;
+        flag14[4] = false;
         mapPoint.setInfo(flag14);
         mapPoint.setfaclTyCd("UC0A13");
         mapPointDTOS.add(mapPoint);
     }
+
     private void getData() {
         for (int page = 10; page < 20; page++) {
             try {
@@ -701,9 +739,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         switch (v.getId()) {
             case R.id.toilet:
-                bus_flag=0;
+                bus_flag = 0;
                 busStationButton.setBackgroundResource(R.drawable.round_button);
-                res_flag=0;
+                res_flag = 0;
                 restaurantButton.setBackgroundResource(R.drawable.round_button);
                 if (toilet_flag == 0) {
                     toiletButton.setBackgroundResource(R.drawable.round_button_pressed);
@@ -726,9 +764,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 break;
             case R.id.restaurant:
-                bus_flag=0;
+                bus_flag = 0;
                 busStationButton.setBackgroundResource(R.drawable.round_button);
-                toilet_flag=0;
+                toilet_flag = 0;
                 toiletButton.setBackgroundResource(R.drawable.round_button);
                 if (res_flag == 0) {
                     restaurantButton.setBackgroundResource(R.drawable.round_button_pressed);
@@ -751,9 +789,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 break;
             case R.id.station:
-                res_flag=0;
+                res_flag = 0;
                 restaurantButton.setBackgroundResource(R.drawable.round_button);
-                toilet_flag=0;
+                toilet_flag = 0;
                 toiletButton.setBackgroundResource(R.drawable.round_button);
                 if (bus_flag == 0) {
                     busStationButton.setBackgroundResource(R.drawable.round_button_pressed);
@@ -805,5 +843,4 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         activeMarkers = new Vector<Marker>();
     }
-
 }
